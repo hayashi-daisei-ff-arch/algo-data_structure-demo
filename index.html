@@ -7,6 +7,7 @@
 <style>
   body { text-align:center; font-family:sans-serif; }
   label { display:block; margin-top:5px; }
+  #operation { font-weight:bold; margin-top:5px; }
   #counter { font-weight:bold; margin-top:5px; }
 </style>
 </head>
@@ -21,11 +22,12 @@
 </select>
 
 <label>アニメーション速度</label>
-<input type="range" id="speedSlider" min="1" max="5" value="3">
-<span id="speedValue">3</span>
+<input type="range" id="speedSlider" min="1" max="3" value="2">
+<span id="speedValue">2</span>
 
 <button onclick="runAnimation()">実行</button>
 
+<p id="operation">操作: </p>
 <p id="counter">操作数: 0</p>
 
 <script>
@@ -33,184 +35,25 @@ let structure = [];
 let steps = [];
 let counter = 0;
 let animationRunning = false;
-let speed = 3;
+let speed = 2;
 const NODE_COUNT = 6;
 const hashSize = 10;
 
 function setup(){
-  createCanvas(900,300).parent(document.body);
+  createCanvas(900,400).parent(document.body);
   frameRate(speed*2);
-  drawStructure();
-}
-
-function draw(){
-  if(animationRunning && counter<steps.length){
-    structure = steps[counter].map(e=>({...e}));
-    drawStructure();
-    counter++;
-    document.getElementById("counter").innerText="操作数: "+counter;
-    if(counter>=steps.length) animationRunning=false;
-  }else{
-    drawStructure();
-  }
-}
-
-function drawStructure(){
-  background(255);
-  textAlign(CENTER,CENTER);
-  textSize(16);
-  fill(0);
-  if(document.getElementById("dsSelect").value==='stack'){
-    for(let i=0;i<structure.length;i++){
-      let val = structure[i].value;
-      let highlight = structure[i].highlight;
-      fill(highlight?'red':'#ccc');
-      rect(400,250 - i*40,100,30);
-      fill(0);
-      text(val,450,265 - i*40);
-    }
-  } else if(document.getElementById("dsSelect").value==='queue'){
-    for(let i=0;i<structure.length;i++){
-      let val = structure[i].value;
-      let highlight = structure[i].highlight;
-      fill(highlight?'red':'#ccc');
-      rect(100 + i*60,200,50,50);
-      fill(0);
-      text(val,125 + i*60,225);
-    }
-  } else if(document.getElementById("dsSelect").value==='hash'){
-    for(let i=0;i<hashSize;i++){
-      let val = structure[i]?structure[i].value:'';
-      let highlight = structure[i]?structure[i].highlight:false;
-      fill(highlight?'red':'#ccc');
-      rect(50 + i*80,100,70,50);
-      fill(0);
-      text(val,85+i*80,125);
-      text(i,85+i*80,80);
-    }
-  }
-}
-
-function runAnimation(){
-  let dsType = document.getElementById("dsSelect").value;
-  speed = parseInt(document.getElementById("speedSlider").value);
-  frameRate(speed*2);
-  document.getElementById("speedValue").innerText=speed;
-  counter=0;
-  animationRunning=true;
-  steps=[];
-  
-  // 自動データ
-  let data = [];
-  for(let i=1;i<=NODE_COUNT;i++) data.push(i);
-  
-  if(dsType==='stack'){
-    let temp = [];
-    for(let v of data){
-      temp.push({value:v, highlight:true});
-      steps.push(temp.map(e=>({...e})));
-      temp[temp.length-1].highlight=false;
-    }
-    for(let i=0;i<data.length;i++){
-      temp[temp.length-1-i].highlight=true;
-      steps.push(temp.map(e=>({...e})));
-      temp.pop();
-      steps.push(temp.map(e=>({...e})));
-    }
-  } else if(dsType==='queue'){
-    let temp = [];
-    for(let v of data){
-      temp.push({value:v, highlight:true});
-      steps.push(temp.map(e=>({...e})));
-      temp[temp.length-1].highlight=false;
-    }
-    for(let i=0;i<data.length;i++){
-      temp[0].highlight=true;
-      steps.push(temp.map(e=>({...e})));
-      temp.shift();
-      steps.push(temp.map(e=>({...e})));
-    }
-  } else if(dsType==='hash'){
-    let temp = new Array(hashSize).fill(null);
-    let idx = 0;
-    for(let v of data){
-      temp[idx] = {value:v, highlight:true};
-      steps.push(temp.map(e=>e?{...e}:null));
-      temp[idx].highlight=false;
-      idx++;
-    }
-  }
-}
-
-// スライダー更新
-document.getElementById("speedSlider").addEventListener("input",()=>{
-  let val=parseInt(document.getElementById("speedSlider").value);
-  document.getElementById("speedValue").innerText=val;
-});
-</script>
-</body>
-</html>
-DOCTYPE html>
-<html>
-<head>
-<meta charset="UTF-8">
-<title>データ構造アニメーション</title>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.6.0/p5.min.js"></script>
-<style>
-  body { text-align:center; font-family:sans-serif; }
-  label { display:block; margin-top:5px; }
-  #counter { font-weight:bold; margin-top:5px; }
-</style>
-</head>
-<body>
-<h2>データ構造アニメーション（スタック／キュー／ハッシュ）</h2>
-
-<label>データ構造選択</label>
-<select id="dsSelect">
-  <option value="stack">スタック（LIFO）</option>
-  <option value="queue">キュー（FIFO）</option>
-  <option value="hash">ハッシュ</option>
-</select>
-
-<label>入力値</label>
-<input type="text" id="inputValue" placeholder="値を入力">
-
-<label>アニメーション速度</label>
-<input type="range" id="speedSlider" min="1" max="5" value="3">
-<span id="speedValue">3</span>
-
-<button onclick="runAnimation()">実行</button>
-
-<p id="counter">操作数: 0</p>
-
-<script>
-let structure = [];
-let dsType = 'stack';
-let steps = [];
-let counter = 0;
-let animationRunning = false;
-let speed = 3;
-let hashSize = 10; // ハッシュテーブルの配列サイズ
-
-function setup(){
-  createCanvas(900,300).parent(document.body);
-  frameRate(speed*2);
-  structure = [];
   drawStructure();
 }
 
 function draw(){
   if(animationRunning && counter<steps.length){
     let step = steps[counter];
-    if(dsType==='stack' || dsType==='queue'){
-      structure = step.slice();
-    } else if(dsType==='hash'){
-      structure = step.slice();
-    }
+    structure = step.map(e=>({...e}));
     drawStructure();
     counter++;
     document.getElementById("counter").innerText="操作数: "+counter;
-    if(counter>=steps.length){ animationRunning=false; }
+    document.getElementById("operation").innerText = "操作: " + step.operation;
+    if(counter>=steps.length) animationRunning=false;
   } else {
     drawStructure();
   }
@@ -221,89 +64,108 @@ function drawStructure(){
   textAlign(CENTER,CENTER);
   textSize(16);
   fill(0);
-  // 描画
+  let dsType = document.getElementById("dsSelect").value;
+  
   if(dsType==='stack'){
+    // 入れ物
+    stroke(0); noFill();
+    rect(395, 250 - NODE_COUNT*40, 110, NODE_COUNT*40);
+    noStroke();
     for(let i=0;i<structure.length;i++){
       let val = structure[i].value;
       let highlight = structure[i].highlight;
-      fill(highlight? 'red':'#ccc');
+      fill(highlight?'red':'#ccc');
       rect(400, 250 - i*40, 100,30);
       fill(0);
       text(val,450, 265 - i*40);
     }
   } else if(dsType==='queue'){
+    // 入れ物
+    stroke(0); noFill();
+    rect(100, 200 - NODE_COUNT*40, 60, NODE_COUNT*40);
+    noStroke();
     for(let i=0;i<structure.length;i++){
       let val = structure[i].value;
       let highlight = structure[i].highlight;
-      fill(highlight? 'red':'#ccc');
-      rect(100 + i*60, 200, 50,50);
+      fill(highlight?'red':'#ccc');
+      rect(100, 200 - i*40, 60,30);
       fill(0);
-      text(val,125 + i*60,225);
+      text(val,130, 215 - i*40);
     }
   } else if(dsType==='hash'){
     for(let i=0;i<hashSize;i++){
       let val = structure[i]?structure[i].value:'';
       let highlight = structure[i]?structure[i].highlight:false;
       fill(highlight?'red':'#ccc');
-      rect(50 + i*80,100,70,50);
+      rect(50 + i*80,150,70,50);
       fill(0);
-      text(val,85+i*80,125);
-      fill(0);
-      text(i,85+i*80,80);
+      text(val,85+i*80,175);
+      text(i,85+i*80,130);
     }
   }
 }
 
 function runAnimation(){
-  let inputVal = document.getElementById("inputValue").value;
-  dsType = document.getElementById("dsSelect").value;
+  let dsType = document.getElementById("dsSelect").value;
   speed = parseInt(document.getElementById("speedSlider").value);
   frameRate(speed*2);
   document.getElementById("speedValue").innerText=speed;
+  
   counter=0;
   animationRunning=true;
   steps=[];
-  // 初期化
-  if(dsType==='stack' || dsType==='queue'){
-    structure = [];
-    steps.push(structure.map(e=>({value:e.value, highlight:false})));
-  } else if(dsType==='hash'){
-    structure = new Array(hashSize).fill(null);
-    steps.push(structure.map(e=>e?{value:e.value, highlight:false}:null));
-  }
-  // 追加処理
-  if(inputVal==='') return;
+  
+  let data = [];
+  for(let i=1;i<=NODE_COUNT;i++) data.push(i);
+  
   if(dsType==='stack'){
-    // push
-    structure.push({value:inputVal, highlight:true});
-    steps.push(structure.map(e=>({value:e.value, highlight:e.highlight})));
-    // pop
-    structure[structure.length-1].highlight=true;
-    steps.push(structure.map(e=>({value:e.value, highlight:e.highlight})));
-    structure.pop();
-    steps.push(structure.map(e=>({value:e.value, highlight:false})));
+    let temp = [];
+    for(let v of data){
+      temp.push({value:v, highlight:true});
+      steps.push(temp.map(e=>({...e, operation:'push '+v})));
+      temp[temp.length-1].highlight=false;
+    }
+    for(let i=0;i<data.length;i++){
+      temp[temp.length-1-i].highlight=true;
+      steps.push(temp.map(e=>({...e, operation:'pop '+temp[temp.length-1-i].value})));
+      temp[temp.length-1-i].visible=false;
+      temp[temp.length-1-i].highlight=false;
+      steps.push(temp.map(e=>({...e, operation:''})));
+    }
   } else if(dsType==='queue'){
-    // enqueue
-    structure.push({value:inputVal, highlight:true});
-    steps.push(structure.map(e=>({value:e.value, highlight:e.highlight})));
-    // dequeue
-    if(structure.length>0){
-      structure[0].highlight=true;
-      steps.push(structure.map(e=>({value:e.value, highlight:e.highlight})));
-      structure.shift();
-      steps.push(structure.map(e=>({value:e.value, highlight:false})));
+    let temp = [];
+    for(let v of data){
+      temp.push({value:v, highlight:true});
+      steps.push(temp.map(e=>({...e, operation:'enqueue '+v})));
+      temp[temp.length-1].highlight=false;
+    }
+    for(let i=0;i<data.length;i++){
+      temp[0].highlight=true;
+      steps.push(temp.map(e=>({...e, operation:'dequeue '+temp[0].value})));
+      temp.shift();
+      steps.push(temp.map(e=>({...e, operation:''})));
     }
   } else if(dsType==='hash'){
-    // hash function simple: key % hashSize
-    let key = parseInt(inputVal);
-    let idx = isNaN(key)?0:key%hashSize;
-    structure[idx]={value:inputVal, highlight:true};
-    steps.push(structure.map(e=>e?{value:e.value, highlight:e.highlight}:null));
-    // clear highlight
-    structure[idx].highlight=false;
-    steps.push(structure.map(e=>e?{value:e.value, highlight:e.highlight}:null));
+    let temp = new Array(hashSize).fill(null);
+    let idx = 0;
+    for(let v of data){
+      temp[idx] = {value:v, highlight:true};
+      steps.push(temp.map(e=>e?{...e, operation:'insert '+v}:null));
+      temp[idx].highlight=false;
+      steps.push(temp.map(e=>e?{...e, operation:''}:null));
+      idx++;
+    }
+    // 検索アニメ例
+    for(let i=0;i<NODE_COUNT;i++){
+      temp[i].highlight=true;
+      steps.push(temp.map(e=>e?{...e, operation:'search '+temp[i].value}:null));
+      temp[i].highlight=false;
+      steps.push(temp.map(e=>e?{...e, operation:''}:null));
+    }
   }
 }
+
+// スライダー更新
 document.getElementById("speedSlider").addEventListener("input",()=>{
   let val=parseInt(document.getElementById("speedSlider").value);
   document.getElementById("speedValue").innerText=val;
