@@ -6,14 +6,17 @@
   <style>
     body { font-family: Arial, sans-serif; text-align: center; margin: 20px; }
     .controls { margin-bottom: 20px; }
-    .container { display: inline-block; margin: 20px; vertical-align: top; }
-    .box { width: 50px; height: 50px; line-height: 50px; border: 2px solid #333;
-           margin: 2px auto; background: lightblue; font-weight: bold; }
-    .highlight { background: orange; }
-    .structure { border: 2px solid #000; display: inline-block; padding: 10px; min-height: 320px; }
-    .queue-row { display: flex; justify-content: center; }
-    .hash-table { display: grid; grid-template-columns: repeat(5, 60px); grid-gap: 5px; margin-top: 20px; }
-    .cell { border: 2px solid #333; width: 60px; height: 60px; line-height: 60px; }
+    .structure { border: 3px solid #000; width: 120px; height: 360px;
+                 margin: 0 auto; display: flex; flex-direction: column-reverse;
+                 align-items: center; justify-content: flex-start; }
+    .queue-structure { border: 3px dashed #000; width: 120px; height: 360px;
+                       margin: 0 auto; display: flex; flex-direction: column;
+                       align-items: center; justify-content: flex-start; }
+    .box { width: 80px; height: 40px; margin: 2px; background: lightblue;
+           border: 2px solid #333; line-height: 40px; font-weight: bold; }
+    .highlight { background: orange !important; }
+    .hash-table { margin: 0 auto; border-collapse: collapse; }
+    .hash-table td { border: 2px solid #333; width: 100px; height: 40px; text-align: center; }
   </style>
 </head>
 <body>
@@ -37,8 +40,7 @@
   <script>
     const animationArea = document.getElementById("animationArea");
     const status = document.getElementById("status");
-
-    function sleep(ms) { return new Promise(resolve => setTimeout(resolve, ms)); }
+    function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
 
     async function runAnimation() {
       animationArea.innerHTML = "";
@@ -55,6 +57,7 @@
       }
     }
 
+    // スタック
     async function runStack(speed) {
       status.textContent = "スタック: push/pop 実行中...";
       const container = document.createElement("div");
@@ -66,7 +69,7 @@
         const box = document.createElement("div");
         box.className = "box";
         box.textContent = i;
-        container.prepend(box);
+        container.appendChild(box);
         stack.push(box);
         status.textContent = `push ${i}`;
         await sleep(speed);
@@ -81,21 +84,19 @@
       status.textContent = "スタック操作完了";
     }
 
+    // キュー
     async function runQueue(speed) {
       status.textContent = "キュー: enqueue/dequeue 実行中...";
       const container = document.createElement("div");
-      container.className = "structure";
+      container.className = "queue-structure";
       animationArea.appendChild(container);
-      const row = document.createElement("div");
-      row.className = "queue-row";
-      container.appendChild(row);
 
       let queue = [];
       for (let i = 1; i <= 6; i++) {
         const box = document.createElement("div");
         box.className = "box";
         box.textContent = i;
-        row.appendChild(box);
+        container.appendChild(box);
         queue.push(box);
         status.textContent = `enqueue ${i}`;
         await sleep(speed);
@@ -110,35 +111,41 @@
       status.textContent = "キュー操作完了";
     }
 
+    // ハッシュ
     async function runHash(speed) {
       status.textContent = "ハッシュ: insert/search 実行中...";
-      const table = document.createElement("div");
+      const table = document.createElement("table");
       table.className = "hash-table";
       animationArea.appendChild(table);
 
+      const SIZE = 10;
       const cells = [];
-      for (let i = 0; i < 10; i++) {
-        const cell = document.createElement("div");
-        cell.className = "cell";
-        cell.textContent = "";
-        table.appendChild(cell);
-        cells.push(cell);
+      for (let i = 0; i < SIZE; i++) {
+        const row = document.createElement("tr");
+        const idxCell = document.createElement("td");
+        idxCell.textContent = i;
+        const valCell = document.createElement("td");
+        valCell.textContent = "";
+        row.appendChild(idxCell);
+        row.appendChild(valCell);
+        table.appendChild(row);
+        cells.push(valCell);
       }
 
       const keys = [12, 25, 37, 8, 19];
       for (let key of keys) {
-        let idx = key % cells.length;
+        let idx = key % SIZE;
         cells[idx].textContent = key;
         cells[idx].classList.add("highlight");
-        status.textContent = `insert ${key} at index ${idx}`;
+        status.textContent = `insert ${key} at index = ${key}%${SIZE} = ${idx}`;
         await sleep(speed);
         cells[idx].classList.remove("highlight");
       }
 
-      let searchKey = 19;
-      let idx = searchKey % cells.length;
+      let searchKey = 21; // 存在しないキー例
+      let idx = searchKey % SIZE;
       cells[idx].classList.add("highlight");
-      status.textContent = `search ${searchKey}`;
+      status.textContent = `search ${searchKey} at index = ${idx}`;
       await sleep(speed);
       cells[idx].classList.remove("highlight");
 
