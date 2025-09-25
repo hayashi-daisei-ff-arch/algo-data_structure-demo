@@ -4,155 +4,149 @@
   <meta charset="UTF-8">
   <title>データ構造アニメーション</title>
   <style>
-    body { font-family: Arial, sans-serif; text-align: center; margin: 20px; }
-    .controls { margin-bottom: 20px; }
-    .structure { border: 3px solid #000; width: 120px; height: 360px;
-                 margin: 0 auto; display: flex; flex-direction: column-reverse;
-                 align-items: center; justify-content: flex-start; }
-    .queue-structure { border: 3px dashed #000; width: 120px; height: 360px;
-                       margin: 0 auto; display: flex; flex-direction: column;
-                       align-items: center; justify-content: flex-start; }
-    .box { width: 80px; height: 40px; margin: 2px; background: lightblue;
-           border: 2px solid #333; line-height: 40px; font-weight: bold; }
-    .highlight { background: orange !important; }
-    .hash-table { margin: 0 auto; border-collapse: collapse; }
-    .hash-table td { border: 2px solid #333; width: 100px; height: 40px; text-align: center; }
+    body { font-family: sans-serif; text-align: center; }
+    .controls { margin: 20px; }
+    .container {
+      display: inline-block;
+      vertical-align: top;
+      margin: 20px;
+      position: relative;
+      width: 120px;
+      height: 300px;
+      border: 2px solid black;
+    }
+    .queue { border-bottom: none; } /* 底なし */
+    .stack { border-bottom: 2px solid black; }
+    .box {
+      width: 80px;
+      height: 30px;
+      background: lightblue;
+      border: 1px solid #000;
+      line-height: 30px;
+      margin: 2px auto;
+      transition: all 1s;
+      position: absolute;
+      left: 50%;
+      transform: translateX(-50%);
+    }
+    #log { margin-top: 20px; height: 120px; overflow-y: auto; border: 1px solid #ccc; padding: 5px; }
+    .highlight { background: yellow; }
   </style>
 </head>
 <body>
   <h1>データ構造アニメーション</h1>
   <div class="controls">
-    <label>データ構造を選択:
-      <select id="structureSelect">
-        <option value="stack">スタック</option>
-        <option value="queue">キュー</option>
-        <option value="hash">ハッシュ</option>
+    <select id="structure">
+      <option value="stack">Stack</option>
+      <option value="queue">Queue</option>
+      <option value="hash">Hash</option>
+    </select>
+    <button onclick="runDemo()">実行</button>
+    <label>速度:
+      <select id="speed">
+        <option value="3000">1</option>
+        <option value="2000" selected>2</option>
+        <option value="1000">3</option>
       </select>
     </label>
-    <label>速度:
-      <input type="range" id="speedRange" min="1" max="3" value="2">
-    </label>
-    <button onclick="runAnimation()">実行</button>
   </div>
-  <div id="animationArea"></div>
-  <p id="status"></p>
+
+  <div id="visual"></div>
+  <div id="log"></div>
 
   <script>
-    const animationArea = document.getElementById("animationArea");
-    const status = document.getElementById("status");
-    function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+    let boxes = [];
+    let speed = 2000;
 
-    async function runAnimation() {
-      animationArea.innerHTML = "";
-      status.textContent = "";
-      const type = document.getElementById("structureSelect").value;
-      const speed = 1000 / document.getElementById("speedRange").value;
-
-      if (type === "stack") {
-        await runStack(speed);
-      } else if (type === "queue") {
-        await runQueue(speed);
-      } else {
-        await runHash(speed);
-      }
+    function logAction(text) {
+      const log = document.getElementById("log");
+      const entry = document.createElement("div");
+      entry.textContent = text;
+      log.appendChild(entry);
+      log.scrollTop = log.scrollHeight;
     }
 
-    // スタック
-    async function runStack(speed) {
-      status.textContent = "スタック: push/pop 実行中...";
-      const container = document.createElement("div");
-      container.className = "structure";
-      animationArea.appendChild(container);
-
-      let stack = [];
-      for (let i = 1; i <= 6; i++) {
-        const box = document.createElement("div");
-        box.className = "box";
-        box.textContent = i;
-        container.appendChild(box);
-        stack.push(box);
-        status.textContent = `push ${i}`;
-        await sleep(speed);
-      }
-      while (stack.length > 0) {
-        const box = stack.pop();
-        box.classList.add("highlight");
-        status.textContent = `pop ${box.textContent}`;
-        await sleep(speed);
-        box.remove();
-      }
-      status.textContent = "スタック操作完了";
+    function createBox(num, index) {
+      const box = document.createElement("div");
+      box.className = "box";
+      box.textContent = num;
+      box.style.bottom = (index * 35 + 5) + "px";
+      return box;
     }
 
-    // キュー
-    async function runQueue(speed) {
-      status.textContent = "キュー: enqueue/dequeue 実行中...";
-      const container = document.createElement("div");
-      container.className = "queue-structure";
-      animationArea.appendChild(container);
+    function runDemo() {
+      document.getElementById("visual").innerHTML = "";
+      document.getElementById("log").innerHTML = "";
+      boxes = [];
+      speed = parseInt(document.getElementById("speed").value);
+      const type = document.getElementById("structure").value;
 
-      let queue = [];
-      for (let i = 1; i <= 6; i++) {
-        const box = document.createElement("div");
-        box.className = "box";
-        box.textContent = i;
-        container.appendChild(box);
-        queue.push(box);
-        status.textContent = `enqueue ${i}`;
-        await sleep(speed);
-      }
-      while (queue.length > 0) {
-        const box = queue.shift();
-        box.classList.add("highlight");
-        status.textContent = `dequeue ${box.textContent}`;
-        await sleep(speed);
-        box.remove();
-      }
-      status.textContent = "キュー操作完了";
-    }
+      if (type === "stack" || type === "queue") {
+        const container = document.createElement("div");
+        container.className = "container " + type;
+        document.getElementById("visual").appendChild(container);
 
-    // ハッシュ
-    async function runHash(speed) {
-      status.textContent = "ハッシュ: insert/search 実行中...";
-      const table = document.createElement("table");
-      table.className = "hash-table";
-      animationArea.appendChild(table);
+        let values = [1, 2, 3, 4, 5, 6];
 
-      const SIZE = 10;
-      const cells = [];
-      for (let i = 0; i < SIZE; i++) {
-        const row = document.createElement("tr");
-        const idxCell = document.createElement("td");
-        idxCell.textContent = i;
-        const valCell = document.createElement("td");
-        valCell.textContent = "";
-        row.appendChild(idxCell);
-        row.appendChild(valCell);
-        table.appendChild(row);
-        cells.push(valCell);
-      }
+        // push/enqueue
+        values.forEach((val, i) => {
+          setTimeout(() => {
+            const box = createBox(val, boxes.length);
+            container.appendChild(box);
+            boxes.push(box);
+            logAction((type === "stack" ? "push " : "enqueue ") + val);
+          }, speed * i);
+        });
 
-      const keys = [12, 25, 37, 8, 19];
-      for (let key of keys) {
-        let idx = key % SIZE;
-        cells[idx].textContent = key;
-        cells[idx].classList.add("highlight");
-        status.textContent = `insert ${key} at index = ${key}%${SIZE} = ${idx}`;
-        await sleep(speed);
-        cells[idx].classList.remove("highlight");
+        // pop/dequeue
+        values.forEach((val, i) => {
+          setTimeout(() => {
+            if (boxes.length > 0) {
+              let removed;
+              if (type === "stack") {
+                removed = boxes.pop();
+              } else {
+                removed = boxes.shift();
+              }
+              removed.classList.add("highlight");
+              setTimeout(() => {
+                removed.remove();
+                // 再配置
+                boxes.forEach((b, idx) => {
+                  b.style.bottom = (idx * 35 + 5) + "px";
+                });
+              }, speed / 2);
+              logAction((type === "stack" ? "pop " : "dequeue ") + removed.textContent);
+            }
+          }, speed * (values.length + i));
+        });
       }
 
-      let searchKey = 21; // 存在しないキー例
-      let idx = searchKey % SIZE;
-      cells[idx].classList.add("highlight");
-      status.textContent = `search ${searchKey} at index = ${idx}`;
-      await sleep(speed);
-      cells[idx].classList.remove("highlight");
+      if (type === "hash") {
+        const table = document.createElement("table");
+        table.border = "1";
+        table.style.margin = "auto";
+        let size = 7;
+        for (let i = 0; i < size; i++) {
+          const row = table.insertRow();
+          const cell = row.insertCell();
+          cell.textContent = i;
+          cell.style.width = "50px";
+          cell.style.height = "30px";
+          cell.style.textAlign = "center";
+        }
+        document.getElementById("visual").appendChild(table);
 
-      if (cells[idx].textContent == searchKey) {
-        status.textContent = `${searchKey} found at index ${idx}`;
-      } else {
-        status.textContent = `${searchKey} not found`;
+        let values = [15, 22, 5, 13];
+        values.forEach((val, i) => {
+          setTimeout(() => {
+            let index = val % size;
+            const row = table.rows[index].cells[0];
+            row.style.background = "yellow";
+            row.textContent = index + " : " + val;
+            logAction("insert " + val + " → index " + index);
+          }, speed * i);
+        });
       }
     }
   </script>
